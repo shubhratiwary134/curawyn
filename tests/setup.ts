@@ -1,34 +1,37 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Chrome mock for tests
-const storageMock = {
-  local: {
-    get: vi.fn().mockImplementation((keys: string | string[] | null, callback?: (items: Record<string, unknown>) => void) => {
-      const res = {};
-      if (typeof callback === 'function') callback(res);
-      return Promise.resolve(res);
-    }),
-    set: vi.fn().mockImplementation((_items: Record<string, unknown>, callback?: () => void) => {
-      if (typeof callback === 'function') callback();
-      return Promise.resolve();
-    }),
-    remove: vi.fn().mockImplementation((_keys: string | string[], callback?: () => void) => {
-      if (typeof callback === 'function') callback();
-      return Promise.resolve();
-    }),
-    clear: vi.fn().mockImplementation((callback?: () => void) => {
-      if (typeof callback === 'function') callback();
-      return Promise.resolve();
-    }),
-    onChanged: {
-      addListener: vi.fn(),
-      removeListener: vi.fn()
-    }
-  }
+const storageLocalMock = {
+  get: vi.fn().mockImplementation((_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+    const res = {};
+    if (typeof callback === 'function') callback(res);
+    return Promise.resolve(res);
+  }),
+  set: vi.fn().mockImplementation((_items: Record<string, unknown>, callback?: () => void) => {
+    if (typeof callback === 'function') callback();
+    return Promise.resolve();
+  }),
+  remove: vi.fn().mockImplementation((_keys: string | string[], callback?: () => void) => {
+    if (typeof callback === 'function') callback();
+    return Promise.resolve();
+  }),
+  clear: vi.fn().mockImplementation((callback?: () => void) => {
+    if (typeof callback === 'function') callback();
+    return Promise.resolve();
+  })
+};
+
+const storageOnChangedMock = {
+  addListener: vi.fn(),
+  removeListener: vi.fn()
 };
 
 (globalThis as unknown as { chrome: unknown }).chrome = {
-  storage: storageMock,
+  storage: {
+    local: storageLocalMock,
+    onChanged: storageOnChangedMock
+  },
   runtime: {
     id: 'mock-extension-id',
     getURL: (path: string) => `chrome-extension://mock-extension-id/${path}`,
