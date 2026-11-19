@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, ContentTypeId, DurationRule, Genre, Subgenre } from '../../core/types';
+import { Settings, ContentTypeId, DurationRule } from '../../core/types';
 import { resolveDuration } from '../../core/resolve/duration';
 import { resolveContentTypes } from '../../core/resolve/contentTypes';
 import { CONTENT_TYPE_REGISTRY } from '../../core/taxonomy/contentTypes';

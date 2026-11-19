@@ -1,5 +1,3 @@
-import { VideoMeta } from '../core/types';
-
 export interface EnrichedMetadata {
   videoId: string;
   description?: string;

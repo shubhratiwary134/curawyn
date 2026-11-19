@@ -20,7 +20,7 @@ export class ContentObserver {
   private observer: MutationObserver | null = null;
   private processedNodes = new WeakSet<HTMLElement>();
   private activeCards = new Set<HTMLElement>();
-  private rafId: number | null = null;
+  private rafId: number | ReturnType<typeof setTimeout> | null = null;
   private settings: Settings;
   private evaluator: CardEvaluator;
   private antiFlickerStyle: HTMLStyleElement | null = null;
@@ -72,8 +72,12 @@ export class ContentObserver {
       this.observer.disconnect();
       this.observer = null;
     }
-    if (this.rafId !== null && typeof cancelAnimationFrame !== 'undefined') {
-      cancelAnimationFrame(this.rafId);
+    if (this.rafId !== null) {
+      if (typeof cancelAnimationFrame !== 'undefined' && typeof this.rafId === 'number') {
+        cancelAnimationFrame(this.rafId);
+      } else if (typeof clearTimeout !== 'undefined') {
+        clearTimeout(this.rafId);
+      }
       this.rafId = null;
     }
   }

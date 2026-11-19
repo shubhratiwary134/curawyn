@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Genre, Subgenre } from '../../core/types';
+import { Settings } from '../../core/types';
 import {
   createGenre,
   updateGenre,
