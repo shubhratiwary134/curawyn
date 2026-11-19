@@ -6,6 +6,7 @@ import { GenresManager } from './components/GenresManager';
 import { DurationAndTypesManager } from './components/DurationAndTypesManager';
 import { BlacklistManager } from './components/BlacklistManager';
 import { DiversityManager } from './components/DiversityManager';
+import { OnboardingModal } from './components/OnboardingModal';
 
 export type OptionsTab =
   | 'general'
@@ -87,6 +88,9 @@ export const OptionsApp: React.FC = () => {
 
       {/* Tab content */}
       <main>
+        {!settings.onboardingDone && (
+          <OnboardingModal settings={settings} onComplete={handleUpdateSettings} />
+        )}
         {activeTab === 'genres' && (
           <GenresManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
