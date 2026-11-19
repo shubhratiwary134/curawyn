@@ -3,6 +3,7 @@ import { Settings } from '../core/types';
 import { DEFAULT_SETTINGS } from '../core/defaults';
 import { getSettings, patchSettings, subscribeSettings } from '../platform/settingsStore';
 import { GenresManager } from './components/GenresManager';
+import { DurationAndTypesManager } from './components/DurationAndTypesManager';
 
 export type OptionsTab =
   | 'general'
@@ -93,9 +94,7 @@ export const OptionsApp: React.FC = () => {
           </div>
         )}
         {activeTab === 'durations' && (
-          <div data-testid="tab-content-durations" style={{ color: '#aaa' }}>
-            Duration & Content Types controls.
-          </div>
+          <DurationAndTypesManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
         {activeTab === 'blacklist' && (
           <div data-testid="tab-content-blacklist" style={{ color: '#aaa' }}>
