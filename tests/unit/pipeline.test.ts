@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+
 import { evaluatePipeline } from '../../src/core/pipeline/pipeline';
 import { DEFAULT_SETTINGS } from '../../src/core/defaults';
 import { VideoMeta, Classification, Settings } from '../../src/core/types';
@@ -29,14 +29,16 @@ describe('Filter Pipeline Precedence Matrix', () => {
     source: 'rules'
   };
 
-  it('allows matching video on full surface when all filters pass', () => {
-    const decision = evaluatePipeline(sampleMeta, sampleClassification, activeSettings, 'home', 'full');
+  it('allows matching video on full surface when all filters pass', async () => {
+  const decision = await evaluatePipeline(sampleMeta, sampleClassification, activeSettings, 'home', 'full');
+
+    
     expect(decision.action).toBe('show');
     expect(decision.reason).toBe('allowed');
   });
 
   // PRECEDENCE 1: Blacklist wins over Whitelist
-  it('Step 1 (Blacklist) beats Whitelist: blacklisted channel inside whitelisted genre is hidden', () => {
+  it('Step 1 (Blacklist) beats Whitelist: blacklisted channel inside whitelisted genre is hidden', async () => {
     const settings: Settings = {
       ...activeSettings,
       blacklist: {
@@ -47,13 +49,13 @@ describe('Filter Pipeline Precedence Matrix', () => {
       }
     };
 
-    const decision = evaluatePipeline(sampleMeta, sampleClassification, settings, 'home', 'full');
+    const decision = await evaluatePipeline(sampleMeta, sampleClassification, settings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('blacklist_channel');
   });
 
   // PRECEDENCE 1 vs 2: Blacklist beats Shorts blocker
-  it('Step 1 (Blacklist) beats Step 2 (Shorts blocker) on blacklisted short', () => {
+  it('Step 1 (Blacklist) beats Step 2 (Shorts blocker) on blacklisted short', async () => {
     const shortMeta: VideoMeta = {
       ...sampleMeta,
       isShort: true
@@ -68,24 +70,26 @@ describe('Filter Pipeline Precedence Matrix', () => {
       }
     };
 
-    const decision = evaluatePipeline(shortMeta, sampleClassification, settings, 'home', 'full');
+    const decision = await evaluatePipeline(shortMeta, sampleClassification, settings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('blacklist_video'); // Step 1 decisive result
   });
 
   // PRECEDENCE 2: Shorts blocker beats Whitelist
-  it('Step 2 (Shorts blocker) beats Whitelist: short in whitelisted genre is blocked', () => {
+  it('Step 2 (Shorts blocker) beats Whitelist: short in whitelisted genre is blocked', async () => {
     const shortMeta: VideoMeta = {
       ...sampleMeta,
       isShort: true
     };
-    const decision = evaluatePipeline(shortMeta, sampleClassification, activeSettings, 'home', 'full');
+    const decision = await evaluatePipeline(shortMeta, sampleClassification, activeSettings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('shorts_blocked');
   });
 
   // PRECEDENCE 3: Live streams blocked
-  it('Step 3 (Live policy): blocks live stream when liveStreams = block', () => {
+  // Updated to async where needed
+it('Step 3 (Live policy): blocks live stream when liveStreams = block', async () => {
+
     const liveMeta: VideoMeta = {
       ...sampleMeta,
       isLive: true,
@@ -99,25 +103,25 @@ describe('Filter Pipeline Precedence Matrix', () => {
       }
     };
 
-    const decision = evaluatePipeline(liveMeta, sampleClassification, settings, 'home', 'full');
+    const decision = await evaluatePipeline(liveMeta, sampleClassification, settings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('live_blocked');
   });
 
   // PRECEDENCE 3: Live streams allowed skip duration
-  it('Step 3 (Live policy): allowed live stream skips duration rules', () => {
+  it('Step 3 (Live policy): allowed live stream skips duration rules', async () => {
     const liveMeta: VideoMeta = {
       ...sampleMeta,
       isLive: true,
       durationSec: null // would fail duration rule if evaluated
     };
-    const decision = evaluatePipeline(liveMeta, sampleClassification, activeSettings, 'home', 'full');
+    const decision = await evaluatePipeline(liveMeta, sampleClassification, activeSettings, 'home', 'full');
     expect(decision.action).toBe('show');
     expect(decision.reason).toBe('allowed');
   });
 
   // PRECEDENCE 4: Whitelist beats Duration
-  it('Step 4 (Whitelist) beats Step 5 (Duration): video in disabled genre is hidden by genre_disabled', () => {
+  it('Step 4 (Whitelist) beats Step 5 (Duration): video in disabled genre is hidden by genre_disabled', async () => {
     const settings: Settings = {
       ...activeSettings,
       genres: {
@@ -133,24 +137,24 @@ describe('Filter Pipeline Precedence Matrix', () => {
       durationSec: 60 // 1 min (violates 5 min minSec)
     };
 
-    const decision = evaluatePipeline(tooShortMeta, sampleClassification, settings, 'home', 'full');
+    const decision = await evaluatePipeline(tooShortMeta, sampleClassification, settings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('genre_disabled'); // step 4 wins over step 5
   });
 
   // PRECEDENCE 5: Duration limit
-  it('Step 5 (Duration): hides video exceeding maxSec', () => {
+  it('Step 5 (Duration): hides video exceeding maxSec', async () => {
     const tooLongMeta: VideoMeta = {
       ...sampleMeta,
       durationSec: 4000 // exceeds 3600s
     };
-    const decision = evaluatePipeline(tooLongMeta, sampleClassification, activeSettings, 'home', 'full');
+    const decision = await evaluatePipeline(tooLongMeta, sampleClassification, activeSettings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('duration_limit');
   });
 
   // PRECEDENCE 6: Content type disallowed
-  it('Step 6 (Content Type): hides video with disallowed content type', () => {
+  it('Step 6 (Content Type): hides video with disallowed content type', async () => {
     const settings: Settings = {
       ...activeSettings,
       global: {
@@ -158,13 +162,13 @@ describe('Filter Pipeline Precedence Matrix', () => {
         contentTypes: ['documentary'] // tutorial not allowed
       }
     };
-    const decision = evaluatePipeline(sampleMeta, sampleClassification, settings, 'home', 'full');
+    const decision = await evaluatePipeline(sampleMeta, sampleClassification, settings, 'home', 'full');
     expect(decision.action).toBe('hide');
     expect(decision.reason).toBe('content_type_disallowed');
   });
 
   // SURFACE MODES:
-  it('bypasses filtering on search surface', () => {
+  it('bypasses filtering on search surface', async () => {
     const disabledGenreSettings: Settings = {
       ...activeSettings,
       genres: {
@@ -175,7 +179,7 @@ describe('Filter Pipeline Precedence Matrix', () => {
         }
       }
     };
-    const decision = evaluatePipeline(sampleMeta, sampleClassification, disabledGenreSettings, 'search', 'bypass');
+    const decision = await evaluatePipeline(sampleMeta, sampleClassification, disabledGenreSettings, 'search', 'bypass');
     expect(decision.action).toBe('show');
     expect(decision.reason).toBe('allowed');
   });
@@ -216,7 +220,7 @@ describe('Filter Pipeline Precedence Matrix', () => {
       ...activeSettings,
       onboardingDone: false
     };
-    const decision = evaluatePipeline(sampleMeta, sampleClassification, unboarded, 'home', 'full');
+    const decision = await evaluatePipeline(sampleMeta, sampleClassification, unboarded, 'home', 'full');
     expect(decision.action).toBe('show');
     expect(decision.reason).toBe('passthrough');
   });

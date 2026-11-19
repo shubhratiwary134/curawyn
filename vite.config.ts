@@ -18,6 +18,7 @@ export default defineConfig({
         options: path.resolve(__dirname, 'options.html')
       },
       output: {
+          inlineDynamicImports: false,
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
         assetFileNames: 'assets/[name].[ext]'

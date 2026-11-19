@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import { ContinuationNudger } from '../../src/content/continuation';
 import { showEmptyFeedBanner, removeEmptyFeedBanner } from '../../src/content/emptyBanner';
 import { OnboardingModal } from '../../src/options/components/OnboardingModal';

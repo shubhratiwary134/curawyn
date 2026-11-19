@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
+
 import { PopupApp } from '../../src/popup/PopupApp';
 import { openCorrectionModal } from '../../src/content/cardActions/correctionModal';
 import { DEFAULT_SETTINGS } from '../../src/core/defaults';

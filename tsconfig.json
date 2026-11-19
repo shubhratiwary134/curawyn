@@ -19,10 +19,8 @@
     "noImplicitReturns": true,
     "noImplicitOverride": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "paths": { "@/*": ["src/*"] },
     "types": ["chrome", "vitest/globals"]
   },
-  "include": ["src", "tests", "vite.config.ts", "vite.content.config.ts", "vitest.config.ts"]
+  "exclude": ["tests"]
 }

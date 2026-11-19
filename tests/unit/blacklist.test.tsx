@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
+
 import { checkDirectBlockedUrl } from '../../src/content/blockedPage';
 import { BlacklistManager } from '../../src/options/components/BlacklistManager';
 import { injectCardHoverButton, showUndoToast } from '../../src/content/cardActions/hoverButton';

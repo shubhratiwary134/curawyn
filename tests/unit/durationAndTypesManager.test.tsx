@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
+
 import { DurationAndTypesManager } from '../../src/options/components/DurationAndTypesManager';
 import { DEFAULT_SETTINGS } from '../../src/core/defaults';
 import { Settings } from '../../src/core/types';

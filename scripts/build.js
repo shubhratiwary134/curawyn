@@ -55,7 +55,7 @@ async function run() {
       lib: {
         entry: path.resolve(rootDir, 'src/content/main.ts'),
         name: 'YFCContent',
-        formats: ['iife'],
+        formats: ['es'],
         fileName: () => 'content.js'
       }
     },
@@ -78,7 +78,7 @@ async function run() {
       lib: {
         entry: path.resolve(rootDir, 'src/background/service-worker.ts'),
         name: 'YFCWorker',
-        formats: ['iife'],
+        formats: ['es'],
         fileName: () => 'service-worker.js'
       }
     },

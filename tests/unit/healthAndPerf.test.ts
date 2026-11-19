@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { evaluateExtractionHealth, resetHealth } from '../../src/content/health';
 import { ContentObserver } from '../../src/content/observer';
 import { evaluatePipeline } from '../../src/core/pipeline/pipeline';
@@ -61,7 +61,7 @@ describe('Performance Benchmark & Leak Prevention', () => {
     isShort: false,
     isLive: false,
     isUpcoming: false,
-    watchedPct: null
+    watchedPct: null,
   };
 
   const classification: Classification = {
@@ -69,7 +69,7 @@ describe('Performance Benchmark & Leak Prevention', () => {
     subgenreId: 'prog_web',
     contentTypes: ['tutorial', 'deep_dive'],
     confidence: 0.95,
-    source: 'rules'
+    source: 'rules',
   };
 
   it('executes pipeline evaluation with median latency < 5 ms', async () => {
@@ -86,8 +86,7 @@ describe('Performance Benchmark & Leak Prevention', () => {
 
     durations.sort((a, b) => a - b);
     const median = durations[Math.floor(iterations / 2)];
-
-    expect(median).toBeLessThan(5.0); // Strict requirement: < 5ms median
+    expect(median).toBeLessThan(5.0);
   });
 
   it('survives 50 simulated SPA navigations without observer leaks', () => {
