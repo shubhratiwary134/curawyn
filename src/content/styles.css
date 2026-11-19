@@ -1,0 +1,4 @@
+/* YouTube Feed Control baseline styles */
+[data-yfc-state="hidden"] {
+  display: none !important;
+}
