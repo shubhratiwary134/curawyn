@@ -1,4 +1,5 @@
 import { Settings, ContentTypeId } from './types';
+import { getSeedTaxonomy } from './taxonomy/seedGenres';
 
 export const CURRENT_SCHEMA_VERSION = 1;
 
@@ -21,6 +22,8 @@ export const ALL_CONTENT_TYPES: ContentTypeId[] = [
   'other'
 ];
 
+const seed = getSeedTaxonomy();
+
 export const DEFAULT_SETTINGS: Settings = {
   schemaVersion: CURRENT_SCHEMA_VERSION,
   onboardingDone: false,
@@ -33,8 +36,8 @@ export const DEFAULT_SETTINGS: Settings = {
     contentTypes: [...ALL_CONTENT_TYPES],
     liveStreams: 'allow'
   },
-  genres: {},
-  subgenres: {},
+  genres: seed.genres,
+  subgenres: seed.subgenres,
   blacklist: {
     videos: {},
     channels: {},
