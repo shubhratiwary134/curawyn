@@ -1,4 +1,5 @@
 import { ContentObserver } from './observer';
+import { ShortsBlocker } from './shorts';
 import { getSettings, subscribeSettings } from '../platform/settingsStore';
 import { detectSurface, getSurfaceMode, onSurfaceNavigation } from './surfaces';
 import { classifyVideo } from '../core/classify/classifier';
@@ -7,6 +8,7 @@ import { Settings, VideoMeta, Decision } from '../core/types';
 
 let currentSettings: Settings | null = null;
 let observer: ContentObserver | null = null;
+let shortsBlocker: ShortsBlocker | null = null;
 
 async function init() {
   currentSettings = await getSettings();
@@ -24,18 +26,27 @@ async function init() {
   observer = new ContentObserver(currentSettings, evaluator);
   observer.start();
 
+  shortsBlocker = new ShortsBlocker(currentSettings);
+  shortsBlocker.start();
+
   // Settings subscription
   subscribeSettings((newSettings) => {
     currentSettings = newSettings;
     if (observer) {
       observer.updateSettings(newSettings);
     }
+    if (shortsBlocker) {
+      shortsBlocker.updateSettings(newSettings);
+    }
   });
 
   // SPA navigation hook
-  onSurfaceNavigation(() => {
+  onSurfaceNavigation((session) => {
     if (observer) {
       observer.resetSession();
+    }
+    if (shortsBlocker) {
+      shortsBlocker.applyShortsBlocking(session.surfaceId);
     }
   });
 
