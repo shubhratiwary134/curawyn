@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from '../core/defaults';
 import { getSettings, patchSettings, subscribeSettings } from '../platform/settingsStore';
 import { GenresManager } from './components/GenresManager';
 import { DurationAndTypesManager } from './components/DurationAndTypesManager';
+import { BlacklistManager } from './components/BlacklistManager';
 
 export type OptionsTab =
   | 'general'
@@ -97,9 +98,7 @@ export const OptionsApp: React.FC = () => {
           <DurationAndTypesManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
         {activeTab === 'blacklist' && (
-          <div data-testid="tab-content-blacklist" style={{ color: '#aaa' }}>
-            Blacklist management.
-          </div>
+          <BlacklistManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
         {activeTab === 'diversity' && (
           <div data-testid="tab-content-diversity" style={{ color: '#aaa' }}>
