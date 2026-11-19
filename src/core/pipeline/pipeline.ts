@@ -12,14 +12,19 @@ import { evaluateLiveStep } from './steps/liveStep';
 import { evaluateWhitelistStep } from './steps/whitelistStep';
 import { evaluateDurationStep } from './steps/durationStep';
 import { evaluateContentTypeStep } from './steps/contentTypeStep';
+import { evaluateDiversityStep } from './diversity/diversityStep';
+import { DiversitySessionState } from './diversity/diversitySession';
 
-export function evaluatePipeline(
+export async function evaluatePipeline(
   meta: VideoMeta,
   classification: Classification | null,
   settings: Settings,
   surfaceId: SurfaceId,
-  surfaceMode: SurfaceMode
-): Decision {
+  surfaceMode: SurfaceMode,
+  diversitySession?: DiversitySessionState,
+  getImpressionCount?: (videoId: string, windowHours: number) => Promise<number>,
+  isSeen?: (videoId: string) => Promise<boolean> | boolean
+): Promise<Decision> {
   // 0. Passthrough mode checks
   if (!settings.enabled || !settings.onboardingDone) {
     return { action: 'show', reason: 'passthrough' };
@@ -74,6 +79,21 @@ export function evaluatePipeline(
   const contentTypeDecision = evaluateContentTypeStep(classification, settings);
   if (contentTypeDecision) {
     return contentTypeDecision;
+  }
+
+  // STEP 7: Diversity engine (stateful, last)
+  if (diversitySession) {
+    const diversityDecision = await evaluateDiversityStep(
+      meta,
+      classification,
+      settings,
+      diversitySession,
+      getImpressionCount,
+      isSeen
+    );
+    if (diversityDecision) {
+      return diversityDecision;
+    }
   }
 
   // All filter steps passed

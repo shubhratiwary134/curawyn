@@ -5,6 +5,7 @@ import { getSettings, patchSettings, subscribeSettings } from '../platform/setti
 import { GenresManager } from './components/GenresManager';
 import { DurationAndTypesManager } from './components/DurationAndTypesManager';
 import { BlacklistManager } from './components/BlacklistManager';
+import { DiversityManager } from './components/DiversityManager';
 
 export type OptionsTab =
   | 'general'
@@ -101,9 +102,7 @@ export const OptionsApp: React.FC = () => {
           <BlacklistManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
         {activeTab === 'diversity' && (
-          <div data-testid="tab-content-diversity" style={{ color: '#aaa' }}>
-            Diversity engine settings.
-          </div>
+          <DiversityManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
         {activeTab === 'shorts' && (
           <div data-testid="tab-content-shorts" style={{ color: '#aaa' }}>

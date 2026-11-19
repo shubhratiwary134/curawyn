@@ -4,23 +4,52 @@ import { getSettings, subscribeSettings } from '../platform/settingsStore';
 import { detectSurface, getSurfaceMode, onSurfaceNavigation } from './surfaces';
 import { classifyVideo } from '../core/classify/classifier';
 import { evaluatePipeline } from '../core/pipeline/pipeline';
+import { DiversitySessionState } from '../core/pipeline/diversity/diversitySession';
+import {
+  getImpressionsCountInWindow,
+  recordImpression,
+  isVideoSeen
+} from '../platform/cacheDb';
 import { Settings, VideoMeta, Decision } from '../core/types';
 
 let currentSettings: Settings | null = null;
 let observer: ContentObserver | null = null;
 let shortsBlocker: ShortsBlocker | null = null;
+let diversitySession = new DiversitySessionState(detectSurface());
 
 async function init() {
   currentSettings = await getSettings();
 
-  const evaluator = (meta: VideoMeta): Decision => {
+  const evaluator = async (meta: VideoMeta): Promise<Decision> => {
     if (!currentSettings) {
       return { action: 'show', reason: 'allowed' };
     }
     const surface = detectSurface();
     const mode = getSurfaceMode(surface, currentSettings);
     const classification = classifyVideo(meta, currentSettings);
-    return evaluatePipeline(meta, classification, currentSettings, surface, mode);
+
+    const decision = await evaluatePipeline(
+      meta,
+      classification,
+      currentSettings,
+      surface,
+      mode,
+      diversitySession,
+      getImpressionsCountInWindow,
+      isVideoSeen
+    );
+
+    if (decision.action === 'show' && decision.reason === 'allowed') {
+      // Record impression once card passes all filters and is rendered
+      recordImpression({
+        videoId: meta.videoId,
+        timestamp: Date.now(),
+        subgenreId: classification.subgenreId,
+        channelId: meta.channel?.channelId
+      }).catch(() => {});
+    }
+
+    return decision;
   };
 
   observer = new ContentObserver(currentSettings, evaluator);
@@ -40,8 +69,9 @@ async function init() {
     }
   });
 
-  // SPA navigation hook
+  // SPA navigation hook: resets surface session and diversity state
   onSurfaceNavigation((session) => {
+    diversitySession = new DiversitySessionState(session.surfaceId, session.sessionId);
     if (observer) {
       observer.resetSession();
     }
@@ -50,7 +80,7 @@ async function init() {
     }
   });
 
-  console.log('[YFC] Pipeline initialized and observing feed.');
+  console.log('[YFC] Pipeline with Diversity Engine initialized.');
 }
 
 if (typeof document !== 'undefined') {
