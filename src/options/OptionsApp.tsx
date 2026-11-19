@@ -6,6 +6,7 @@ import { GenresManager } from './components/GenresManager';
 import { DurationAndTypesManager } from './components/DurationAndTypesManager';
 import { BlacklistManager } from './components/BlacklistManager';
 import { DiversityManager } from './components/DiversityManager';
+import { AdvancedManager } from './components/AdvancedManager';
 import { OnboardingModal } from './components/OnboardingModal';
 
 export type OptionsTab =
@@ -114,9 +115,7 @@ export const OptionsApp: React.FC = () => {
           </div>
         )}
         {activeTab === 'advanced' && (
-          <div data-testid="tab-content-advanced" style={{ color: '#aaa' }}>
-            Advanced settings, backup, and restore.
-          </div>
+          <AdvancedManager settings={settings} onUpdateSettings={handleUpdateSettings} />
         )}
       </main>
     </div>
