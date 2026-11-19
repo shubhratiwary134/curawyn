@@ -3,6 +3,7 @@ import { extractCardMeta } from './extractCard';
 import { applyDecision } from './applyDecision';
 import { Decision, Settings, VideoMeta } from '../core/types';
 import { detectSurface, getSurfaceMode } from './surfaces';
+import { evaluateExtractionHealth } from './health';
 
 export type CardEvaluator = (
   meta: VideoMeta,
@@ -10,7 +11,6 @@ export type CardEvaluator = (
   settings: Settings
 ) => Promise<Decision> | Decision;
 
-// Default stub evaluator: shows everything as 'allowed'
 export const defaultStubEvaluator: CardEvaluator = () => ({
   action: 'show',
   reason: 'allowed'
@@ -20,7 +20,6 @@ export class ContentObserver {
   private observer: MutationObserver | null = null;
   private processedNodes = new WeakSet<HTMLElement>();
   private activeCards = new Set<HTMLElement>();
-  private pendingBatch: HTMLElement[] = [];
   private rafId: number | null = null;
   private settings: Settings;
   private evaluator: CardEvaluator;
@@ -65,7 +64,6 @@ export class ContentObserver {
       });
     }
 
-    // Initial scan
     this.scheduleBatch();
   }
 
@@ -95,7 +93,6 @@ export class ContentObserver {
     const surface = detectSurface();
     const mode = getSurfaceMode(surface, this.settings);
 
-    // Only apply anti-flicker on full / blacklistOnly surfaces; NEVER on search / bypass
     if (mode === 'bypass') {
       if (this.antiFlickerStyle) {
         this.antiFlickerStyle.remove();
@@ -138,42 +135,64 @@ export class ContentObserver {
     const surface = detectSurface();
     const mode = getSurfaceMode(surface, this.settings);
 
-    // If surface is bypassed, show everything and skip
     if (mode === 'bypass') {
       this.showBypassedNodes();
       return;
     }
 
-    // Query candidate cards
     const selector = SELECTORS.cards.join(', ');
     const candidates = document.querySelectorAll(selector);
 
+    let parsedCount = 0;
+    const cardsToProcess: { cardEl: HTMLElement; meta: VideoMeta }[] = [];
+
+    // Phase 1: Batch DOM reads
     for (let i = 0; i < candidates.length; i++) {
       const cardEl = candidates[i] as HTMLElement;
       if (this.processedNodes.has(cardEl)) continue;
 
       this.processedNodes.add(cardEl);
       this.activeCards.add(cardEl);
-      this.processCard(cardEl);
-    }
-  }
 
-  private async processCard(cardEl: HTMLElement): Promise<void> {
-    const meta = extractCardMeta(cardEl);
-    if (!meta) {
-      // If unextractable (e.g. shelf header, ad), mark shown to remove anti-flicker hidden state
-      cardEl.setAttribute('data-yfc-state', 'shown');
-      cardEl.setAttribute('data-yfc-reason', 'allowed');
+      const meta = extractCardMeta(cardEl);
+      if (meta) {
+        parsedCount++;
+        cardsToProcess.push({ cardEl, meta });
+      } else {
+        // Fallback for non-video items in grid
+        cardEl.setAttribute('data-yfc-state', 'shown');
+        cardEl.setAttribute('data-yfc-reason', 'allowed');
+      }
+    }
+
+    // Health check evaluation: fail-open if broken
+    const health = evaluateExtractionHealth(candidates.length, parsedCount, mode);
+    if (health.extractionBroken) {
+      for (const item of cardsToProcess) {
+        applyDecision(
+          item.cardEl,
+          { action: 'show', reason: 'allowed', detail: 'fail_open' },
+          item.meta,
+          null,
+          this.settings.debug
+        );
+      }
       return;
     }
 
+    // Phase 2: Batch DOM writes / pipeline execution
+    for (const item of cardsToProcess) {
+      this.processCard(item.cardEl, item.meta);
+    }
+  }
+
+  private async processCard(cardEl: HTMLElement, meta: VideoMeta): Promise<void> {
     cardEl.setAttribute('data-yfc-state', 'pending');
     try {
       const decision = await this.evaluator(meta, cardEl, this.settings);
       applyDecision(cardEl, decision, meta, null, this.settings.debug);
     } catch (err) {
       console.error('[YFC] Error evaluating card:', err);
-      // Fail-safe open on error
       applyDecision(
         cardEl,
         { action: 'show', reason: 'allowed', detail: 'evaluator_error' },
